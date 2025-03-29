@@ -21,6 +21,7 @@ function App() {
 
     setLoading(true);
     setError("");
+    setResult(null);
     const formData = new FormData();
     formData.append("file", file);
 
@@ -30,28 +31,13 @@ function App() {
         body: formData,
       });
 
-      console.log("🛰️ Raw response:", res);
-
-      const contentType = res.headers.get("content-type");
-
       if (!res.ok) {
-        const text = await res.text();
-        console.error("❌ Server error response:", text);
         throw new Error("Server returned an error.");
       }
 
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await res.text();
-        console.error("❌ Not JSON:", text);
-        throw new Error("Unexpected server response.");
-      }
-
       const data = await res.json();
-      console.log("✅ Received JSON:", data);
-
       if (data.error) {
         setError(data.error);
-        setResult(null);
       } else {
         setResult(data);
       }
@@ -91,12 +77,13 @@ function App() {
           </div>
         )}
 
-        {result && (
+        {result && !error && (
           <div className="mt-6 border-t pt-4 text-center">
             <h2 className="text-lg font-semibold mb-2">📊 Audit Result</h2>
             {Object.entries(result).map(([group, score]) => (
               <p key={group} className="text-gray-700">
-                <span className="font-semibold">{group}:</span> {score.toFixed(4)}
+                <span className="font-semibold">{group}:</span>{" "}
+                {typeof score === "number" ? score.toFixed(4) : score}
               </p>
             ))}
           </div>
