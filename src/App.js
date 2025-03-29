@@ -30,13 +30,33 @@ function App() {
         body: formData,
       });
 
+      console.log("🛰️ Raw response:", res);
+
+      const contentType = res.headers.get("content-type");
+
       if (!res.ok) {
+        const text = await res.text();
+        console.error("❌ Server error response:", text);
         throw new Error("Server returned an error.");
       }
 
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("❌ Not JSON:", text);
+        throw new Error("Unexpected server response.");
+      }
+
       const data = await res.json();
-      setResult(data);
+      console.log("✅ Received JSON:", data);
+
+      if (data.error) {
+        setError(data.error);
+        setResult(null);
+      } else {
+        setResult(data);
+      }
     } catch (err) {
+      console.error("❌ Network or parsing error:", err);
       setError("Failed to analyze image. Please try again.");
     } finally {
       setLoading(false);
