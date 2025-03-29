@@ -25,20 +25,16 @@ function App() {
     formData.append("file", file);
 
     try {
-      const res = await fetch(
-        "https://bias-audit-api-2-production.up.railway.app/audit/",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const res = await fetch("https://bias-audit-api-2-production.up.railway.app/audit/", {
+        method: "POST",
+        body: formData,
+      });
 
       if (!res.ok) {
         throw new Error("Server returned an error.");
       }
 
       const data = await res.json();
-      console.log("✅ Result from backend:", data);
       setResult(data);
     } catch (err) {
       console.error("❌ Network or parsing error:", err);
@@ -76,32 +72,22 @@ function App() {
           </div>
         )}
 
-        {result && typeof result === "object" && !error && (
+        {result && (
           <div className="mt-6 border-t pt-4 text-center">
             <h2 className="text-lg font-semibold mb-2">📊 Audit Result</h2>
-            {Object.entries(result).map(([group, value]) => {
-              // Case 1: result is directly like { "White": 0.123 }
-              if (typeof value === "number") {
-                return (
-                  <p key={group} className="text-gray-700">
-                    <span className="font-semibold">{group}:</span>{" "}
-                    {value.toFixed(4)}
-                  </p>
-                );
-              }
 
-              // Case 2: result is nested like { result: { "White": 0.123 } }
-              if (typeof value === "object" && value !== null) {
-                return Object.entries(value).map(([subgroup, score]) => (
-                  <p key={subgroup} className="text-gray-700">
-                    <span className="font-semibold">{subgroup}:</span>{" "}
-                    {typeof score === "number" ? score.toFixed(4) : score}
-                  </p>
-                ));
-              }
+            <p className="mb-4 text-md text-gray-800">
+              <span className="font-bold">👤 Closest Group:</span>{" "}
+              <span className="text-blue-600">{result.closest_group}</span>
+            </p>
 
-              return null;
-            })}
+            {result.distances &&
+              Object.entries(result.distances).map(([group, score]) => (
+                <p key={group} className="text-gray-700">
+                  <span className="font-semibold">{group}:</span>{" "}
+                  {score.toFixed(4)}
+                </p>
+              ))}
           </div>
         )}
       </div>
