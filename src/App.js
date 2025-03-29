@@ -21,26 +21,25 @@ function App() {
 
     setLoading(true);
     setError("");
-    setResult(null);
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      const res = await fetch("https://bias-audit-api-2-production.up.railway.app/audit/", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(
+        "https://bias-audit-api-2-production.up.railway.app/audit/",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!res.ok) {
         throw new Error("Server returned an error.");
       }
 
       const data = await res.json();
-      if (data.error) {
-        setError(data.error);
-      } else {
-        setResult(data);
-      }
+      console.log("✅ Result from backend:", data);
+      setResult(data);
     } catch (err) {
       console.error("❌ Network or parsing error:", err);
       setError("Failed to analyze image. Please try again.");
@@ -77,15 +76,32 @@ function App() {
           </div>
         )}
 
-        {result && !error && (
+        {result && typeof result === "object" && !error && (
           <div className="mt-6 border-t pt-4 text-center">
             <h2 className="text-lg font-semibold mb-2">📊 Audit Result</h2>
-            {Object.entries(result).map(([group, score]) => (
-              <p key={group} className="text-gray-700">
-                <span className="font-semibold">{group}:</span>{" "}
-                {typeof score === "number" ? score.toFixed(4) : score}
-              </p>
-            ))}
+            {Object.entries(result).map(([group, value]) => {
+              // Case 1: result is directly like { "White": 0.123 }
+              if (typeof value === "number") {
+                return (
+                  <p key={group} className="text-gray-700">
+                    <span className="font-semibold">{group}:</span>{" "}
+                    {value.toFixed(4)}
+                  </p>
+                );
+              }
+
+              // Case 2: result is nested like { result: { "White": 0.123 } }
+              if (typeof value === "object" && value !== null) {
+                return Object.entries(value).map(([subgroup, score]) => (
+                  <p key={subgroup} className="text-gray-700">
+                    <span className="font-semibold">{subgroup}:</span>{" "}
+                    {typeof score === "number" ? score.toFixed(4) : score}
+                  </p>
+                ));
+              }
+
+              return null;
+            })}
           </div>
         )}
       </div>
